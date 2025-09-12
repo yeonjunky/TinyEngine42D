@@ -1,49 +1,17 @@
-# Tiny42D-Engine
-Tiny engine for 2D
+## This is Tiny 2D Engine project for PanicAttack (42 Gyeongsan)
 
-## Overview
-A simple Win32 application written in C++ that creates a 1920x1080 window. This project uses CMake for build configuration and is designed to work with Visual Studio.
+#### 개발환경
+- Windows 11, Visual Studio 2022를 기준으로 합니다.
+- 맥 환경을 원하시는 분은 자동으로 호환성 유지해주는 도구를 제작해서 기여하시면 됩니다. (WinAPI아니여도 내부 로직에 기여가 가능)
 
-## Requirements
-- Windows operating system
-- CMake 3.16 or higher
-- Visual Studio 2019 or higher (or compatible C++ compiler)
-- Windows SDK
+#### 목표
+- 동아리 부원들에게 의미있는 프로젝트의 완성과 협업의 기회를 제공하고자 만든 프로젝트 입니다.
+- 아주아주 간단한 프로토타입을 1차목표로 하고 그 다음을 계획할 예정입니다.
+- 함께 프로그래밍 하는 연습을 하는 것이 목표입니다. 잘 할 필요 없고 성실할 필요도 없습니다.
 
-## Building the Project
-
-### Using Visual Studio with CMake
-1. Clone the repository
-2. Open a command prompt in the project directory
-3. Create a build directory:
-   ```cmd
-   mkdir build
-   cd build
-   ```
-4. Generate Visual Studio project files:
-   ```cmd
-   cmake -G "Visual Studio 16 2019" -A x64 ..
-   ```
-   Or for Visual Studio 2022:
-   ```cmd
-   cmake -G "Visual Studio 17 2022" -A x64 ..
-   ```
-5. Open the generated `.sln` file in Visual Studio or build from command line:
-   ```cmd
-   cmake --build . --config Release
-   ```
-
-### Using Visual Studio Code
-1. Install the CMake Tools extension
-2. Open the project folder
-3. Use Ctrl+Shift+P and run "CMake: Configure"
-4. Use Ctrl+Shift+P and run "CMake: Build"
-
-## Running the Application
-After building, the executable will be located in the `build/bin/` directory. Run `Tiny42DEngine.exe` to see a 1920x1080 window with the Tiny42D Engine.
-
-## Features
-- Creates a 1920x1080 window
-- Centers the window on screen
-- Basic Win32 message handling
-- Simple graphics rendering with text display
+#### 규칙
+- 커밋, 이슈트래킹 등은 한글로 할 예정입니다.
+  - 영어도 좋지만 프로그래밍에 더 집중하기 위한 선택입니다.
+- 서로간의 예의를 지켜주세요. 만약 어길시 프로젝트에서 제외될 수 있습니다.
+- 기본적으로 패닉어택분들께만 열려있는 프로젝트 입니다.
+- 적어도 한명이상이 리뷰 후에 머지를 가능하게 할 계획입니다. 본인이 PR보내고 머지하는것은 금지합니다.
