@@ -1,7 +1,7 @@
 ## This is Tiny 2D Engine project for PanicAttack (42 Gyeongsan)
 
 #### 개발환경
-- Windows 11, Visual Studio 2022를 기준으로 합니다.
+- Windows 11, Visual Studio 2022, CMake 3.16이상을 기준으로 합니다.
 - 맥 환경을 원하시는 분은 자동으로 호환성 유지해주는 도구를 제작해서 기여하시면 됩니다. (WinAPI아니여도 내부 로직에 기여가 가능)
 
 #### 목표
