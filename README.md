@@ -1,6 +1,3 @@
-# Tiny42D-Engine
-
-
 ## This is Tiny 2D Engine project for PanicAttack (42 Gyeongsan)
 
 #### 개발환경
