@@ -1,4 +1,4 @@
-## Tiny Engine for 2D project for PanicAttack (42 Gyeongsan)
+## Tiny Engine for 2D project
 
 #### 개발환경
 - Windows 11, Visual Studio 2022, CMake 3.16이상을 기준으로 합니다.
