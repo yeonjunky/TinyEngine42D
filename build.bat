@@ -1,13 +1,13 @@
 @echo off
 echo Building Tiny42D Engine...
 
-:: Create build directory if it doesn't exist
+:: 빌드 디렉토리가 없으면 생성
 if not exist build mkdir build
 
-:: Change to build directory
+:: 빌드 디렉토리로 이동
 cd build
 
-:: Generate Visual Studio project files (try VS 2022 first, then VS 2019)
+:: Visual Studio 프로젝트 파일 생성 (VS 2022를 먼저 시도, 그 다음 VS 2019)
 echo Generating Visual Studio project files...
 cmake -G "Visual Studio 17 2022" -A x64 .. 2>nul
 if %errorlevel% neq 0 (
@@ -20,7 +20,7 @@ if %errorlevel% neq 0 (
     )
 )
 
-:: Build the project
+:: 프로젝트 빌드
 echo Building project...
 cmake --build . --config Release
 
