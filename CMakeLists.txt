@@ -7,9 +7,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Windows 플랫폼 확인
-if(NOT WIN32)
-    message(FATAL_ERROR "이 프로젝트는 Windows 전용으로 설계되었으며 Win32 API가 필요합니다.")
+if(NOT (WIN32 OR APPLE))
+    message(FATAL_ERROR "이 프로젝트는 Windows, Mac os 용으로 설계되었으며 Win32 API, 혹은 glfw가 필요합니다.")
 endif()
+
+# 실행 파일 생성 (콘솔 애플리케이션으로 변경)
+add_executable(Tiny42DEngine
+    src/main.cpp
+)
 
 # Windows 전용 설정
 if(WIN32)
@@ -19,25 +24,37 @@ if(WIN32)
     # Unicode 지원 활성화
     add_definitions(-DUNICODE)
     add_definitions(-D_UNICODE)
-endif()
 
-# 실행 파일 생성 (콘솔 애플리케이션으로 변경)
-add_executable(Tiny42DEngine
-    src/main.cpp
-)
-
-# Windows 라이브러리 링크
-if(WIN32)
+    # Windows 라이브러리 링크
     target_link_libraries(Tiny42DEngine
         user32
         kernel32
         gdi32
     )
+
+    # Visual Studio 시작 프로젝트 설정
+    if(CMAKE_GENERATOR MATCHES "Visual Studio")
+        set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Tiny42DEngine)
+    endif()
 endif()
 
-# Visual Studio 시작 프로젝트 설정
-if(CMAKE_GENERATOR MATCHES "Visual Studio")
-    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Tiny42DEngine)
+# Mac os 전용 설정
+if(APPLE)
+    target_include_directories(Tiny42DEngine PUBLIC
+        /opt/homebrew/include
+        /Users/kim/VulkanSDK/1.4.321.0/macOS/include
+    )
+
+    target_link_directories(Tiny42DEngine PUBLIC
+        /opt/homebrew/lib
+        /Users/kim/VulkanSDK/1.4.321.0/macOS/include
+    )
+
+    target_link_libraries(Tiny42DEngine
+        /opt/homebrew/lib/libglfw.3.4.dylib
+        /usr/local/lib/libvulkan.1.dylib
+        /usr/local/lib/libMoltenVK.dylib
+    )
 endif()
 
 # 출력 디렉토리
