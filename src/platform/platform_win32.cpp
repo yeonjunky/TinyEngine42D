@@ -1,6 +1,6 @@
 #ifdef _WIN32
 
-#include "platform.h"
+#include "platform.hpp"
 #include <iostream>
 #include <stdexcept>
 

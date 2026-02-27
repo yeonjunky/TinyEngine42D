@@ -1,8 +1,8 @@
 #include <iostream>
 #include <memory>
 
-#include "platform/platform.h"
-#include "renderer/vk_instance.h"
+#include "platform/platform.hpp"
+#include "renderer/vk_instance.hpp"
 
 int main() {
 #ifdef _WIN32
