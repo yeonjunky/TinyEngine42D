@@ -32,11 +32,7 @@ int main() {
 
   auto requiredExtensions = platform->getRequiredInstanceExtensions();
 
-#ifdef NDEBUG
-  const bool enableValidation = false;
-#else
-  const bool enableValidation = true;
-#endif
+  constexpr bool enableValidation = tiny::kDebugBuild;
 
   if (!vulkanInstance.create("Tiny42DEngine", requiredExtensions,
                              enableValidation)) {

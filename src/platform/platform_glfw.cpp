@@ -11,6 +11,14 @@ public:
   ~PlatformGLFW() override { destroyWindow(); }
 
   bool createWindow(const WindowConfig &config) override {
+    // Force to use X11 protocol for Wayland session
+    // After implementing redering phase, It may can be deleted.
+#if defined(GLFW_VERSION_MAJOR) &&                                              \
+    (GLFW_VERSION_MAJOR > 3 ||                                                  \
+     (GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4))
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
+
     if (!glfwInit()) {
       std::cerr << "GLFW 초기화 실패!" << std::endl;
       return false;
@@ -41,8 +49,10 @@ public:
                          }
                        });
 
-    std::cout << "GLFW 윈도우 생성 완료: " << config.width << "x"
-              << config.height << std::endl;
+    if constexpr (kDebugBuild) {
+      std::cout << "[DEBUG] GLFW 윈도우 생성 완료: " << config.width << "x"
+                << config.height << std::endl;
+    }
     return true;
   }
 
@@ -88,7 +98,9 @@ public:
       throw std::runtime_error("GLFW Vulkan Surface 생성 실패!");
     }
 
-    std::cout << "GLFW Vulkan Surface 생성 완료" << std::endl;
+    if constexpr (kDebugBuild) {
+      std::cout << "[DEBUG] GLFW Vulkan Surface 생성 완료" << std::endl;
+    }
     return surface;
   }
 
