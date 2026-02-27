@@ -18,6 +18,14 @@
 
 namespace tiny {
 
+/// 디버그 빌드 여부를 나타내는 컴파일 타임 상수
+/// NDEBUG가 정의되면 릴리즈 빌드, 그렇지 않으면 디버그 빌드
+#ifdef NDEBUG
+inline constexpr bool kDebugBuild = false;
+#else
+inline constexpr bool kDebugBuild = true;
+#endif
+
 /// 플랫폼별 윈도우 핸들을 추상화하는 구조체
 struct WindowHandle {
 #ifdef _WIN32
