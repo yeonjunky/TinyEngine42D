@@ -13,10 +13,12 @@ public:
   bool createWindow(const WindowConfig &config) override {
     // Force to use X11 protocol for Wayland session
     // After implementing redering phase, It may can be deleted.
+#if defined(__linux__)
 #if defined(GLFW_VERSION_MAJOR) &&                                              \
     (GLFW_VERSION_MAJOR > 3 ||                                                  \
      (GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4))
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
 #endif
 
     if (!glfwInit()) {

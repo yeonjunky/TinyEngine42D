@@ -39,6 +39,11 @@ bool VulkanInstance::create(const std::string &appName,
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
   }
 
+#if defined(__APPLE__)
+  extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+  extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+#endif
+
   // 사용 가능한 확장 출력
   uint32_t extensionCount = 0;
   vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -58,6 +63,10 @@ bool VulkanInstance::create(const std::string &appName,
   createInfo.pApplicationInfo = &appInfo;
   createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
   createInfo.ppEnabledExtensionNames = extensions.data();
+
+#if defined(__APPLE__)
+  createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
 
   // Debug Messenger 생성 정보 (인스턴스 생성/파괴 시에도 디버그 메시지 수신)
   VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
