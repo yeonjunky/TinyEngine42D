@@ -1,175 +1,82 @@
-#include <windows.h>
 #include <iostream>
 #include <memory>
 
+#include "platform/platform.h"
+#include "renderer/vk_instance.h"
 
-// À©µµ¿ì Å©±â
-const int WINDOW_WIDTH = 1280;
-const int WINDOW_HEIGHT = 960;
+int main() {
+#ifdef _WIN32
+  // Windows ì½˜ì†” UTF-8 ì¶œë ¥ ì„¤ì •
+  SetConsoleOutputCP(CP_UTF8);
+#endif
 
-// À©µµ¿ì ÇÁ·Î½ÃÀú ÇÔ¼ö ¼±¾ğ
-LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+  // =============================================
+  // 1. í”Œë«í¼ ìœˆë„ìš° ìƒì„±
+  // =============================================
+  auto platform = tiny::Platform::create();
 
-// ÄÜ¼ÖÃ¢ÀÌ ÀÖÀ¸¸é µğ¹ö±ë¿¡ Æí¸®ÇÕ´Ï´Ù.
-// µğ¹ö±ëÇÒ ¶§ ¾Ö¸ÅÇÑ °ªµéÀ» coutÀ¸·Î Ãâ·ÂÇØ¼­ È®ÀÎÇØº¸¼¼¿ä.
-int main()
-{
+  tiny::WindowConfig windowConfig;
+  windowConfig.title = L"Tiny42D Engine";
+  windowConfig.width = 1280;
+  windowConfig.height = 960;
 
-    const int width = WINDOW_WIDTH, height = WINDOW_HEIGHT;
+  if (!platform->createWindow(windowConfig)) {
+    std::cerr << "ìœˆë„ìš° ìƒì„± ì‹¤íŒ¨!" << std::endl;
+    return -1;
+  }
 
-    WNDCLASSEX wc = {sizeof(WNDCLASSEX),
-                     CS_CLASSDC,
-                     WndProc,
-                     0L,
-                     0L,
-                     GetModuleHandle(NULL),
-                     NULL,
-                     LoadCursor(nullptr, IDC_ARROW),
-                     NULL,
-                     NULL,
-                     L"Tiny42DEngine", // Ã¢ ÀÌ¸§ string 
-                     NULL};
+  // =============================================
+  // 2. Vulkan Instance ìƒì„±
+  // =============================================
+  tiny::VulkanInstance vulkanInstance;
 
-    RegisterClassEx(&wc);
+  auto requiredExtensions = platform->getRequiredInstanceExtensions();
 
-    // ¿ì¸®°¡ ¿øÇÏ´Â ±×¸²ÀÌ ±×·ÁÁú ºÎºĞÀÇ ÇØ»óµµ
-    RECT wr = {0, 0, width, height};
+#ifdef NDEBUG
+  const bool enableValidation = false;
+#else
+  const bool enableValidation = true;
+#endif
 
-    // À©µµ¿ì ½ºÅ¸ÀÏ ¸í½ÃÀûÀ¸·Î Á¤ÀÇ (ÃÖ¼ÒÈ­, ÃÖ´ëÈ­, ´İ±â ¹öÆ° Æ÷ÇÔ)
-    DWORD windowStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
-    // WS_OVERLAPPEDWINDOW´Â ´ÙÀ½À» Æ÷ÇÔÇÕ´Ï´Ù:
-    // WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SIZEBOX
+  if (!vulkanInstance.create("Tiny42DEngine", requiredExtensions,
+                             enableValidation)) {
+    std::cerr << "Vulkan Instance ìƒì„± ì‹¤íŒ¨!" << std::endl;
+    return -1;
+  }
 
-    // ÇÊ¿äÇÑ À©µµ¿ì Å©±â(ÇØ»óµµ) °è»ê
-    // wrÀÇ °ªÀÌ ¹Ù²ñ
-    AdjustWindowRect(&wr, windowStyle, FALSE);
+  // =============================================
+  // 3. Vulkan Surface ìƒì„±
+  // =============================================
+  VkSurfaceKHR surface = platform->createSurface(vulkanInstance.getInstance());
+  if (surface == VK_NULL_HANDLE) {
+    std::cerr << "Vulkan Surface ìƒì„± ì‹¤íŒ¨!" << std::endl;
+    return -1;
+  }
 
-    // À©µµ¿ì¸¦ È­¸é Áß¾Ó¿¡ ¹èÄ¡ÇÏ±â À§ÇÑ °è»ê
-    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-    int posX = (screenWidth - (wr.right - wr.left)) / 2;
-    int posY = (screenHeight - (wr.bottom - wr.top)) / 2;
+  std::cout << "========================================" << std::endl;
+  std::cout << "Tiny42D Engine ì´ˆê¸°í™” ì™„ë£Œ!" << std::endl;
+  std::cout << "ESC í‚¤ë¥¼ ëˆŒëŸ¬ ì¢…ë£Œí•˜ì„¸ìš”." << std::endl;
+  std::cout << "========================================" << std::endl;
 
-    // À©µµ¿ì¸¦ ¸¸µé¶§ À§¿¡¼­ °è»êÇÑ wr°ú ¸í½ÃÀû ½ºÅ¸ÀÏ »ç¿ë
-    HWND hwnd = CreateWindow(wc.lpszClassName, L"Tiny42D Engine",
-                             windowStyle,
-                             posX, // À©µµ¿ì ÁÂÃø »ó´ÜÀÇ x ÁÂÇ¥ (Áß¾Ó ¹èÄ¡)
-                             posY, // À©µµ¿ì ÁÂÃø »ó´ÜÀÇ y ÁÂÇ¥ (Áß¾Ó ¹èÄ¡)
-                             wr.right - wr.left, // À©µµ¿ì °¡·Î ¹æÇâ ÇØ»óµµ
-                             wr.bottom - wr.top, // À©µµ¿ì ¼¼·Î ¹æÇâ ÇØ»óµµ
-                             NULL, NULL, wc.hInstance, NULL);
+  // =============================================
+  // 4. ë©”ì¸ ë£¨í”„
+  // =============================================
+  while (platform->pollEvents()) {
+    // Phase 2+ì—ì„œ ì—¬ê¸°ì— ë Œë”ë§ ì½”ë“œê°€ ë“¤ì–´ê°‘ë‹ˆë‹¤
+  }
 
-    if (!hwnd) {
-        std::cerr << "À©µµ¿ì »ı¼º¿¡ ½ÇÆĞÇß½À´Ï´Ù!" << std::endl;
-        return -1;
-    }
+  // =============================================
+  // 5. ì •ë¦¬ (ìƒì„±ì˜ ì—­ìˆœ)
+  // =============================================
+  // Surface íŒŒê´´
+  if (surface != VK_NULL_HANDLE) {
+    vkDestroySurfaceKHR(vulkanInstance.getInstance(), surface, nullptr);
+    std::cout << "Vulkan Surface íŒŒê´´ ì™„ë£Œ" << std::endl;
+  }
 
-    ShowWindow(hwnd, SW_SHOWDEFAULT);
-    UpdateWindow(hwnd);
+  // VulkanInstanceëŠ” ì†Œë©¸ìì—ì„œ ìë™ ì •ë¦¬
+  // Platform ìœˆë„ìš°ë„ ì†Œë©¸ìì—ì„œ ìë™ ì •ë¦¬
 
-    std::cout << "Tiny42D EngineÀÌ ½ÃÀÛµÇ¾ú½À´Ï´Ù." << std::endl;
-    std::cout << "À©µµ¿ì Å©±â: " << width << "x" << height << std::endl;
-
-    // ¸ŞÀÎ ¸Ş½ÃÁö ·çÇÁ
-    MSG msg = {};
-    while (WM_QUIT != msg.message)
-    {
-        // ¸Ş½ÃÁö Ã³¸®¸¸ ÇÕ´Ï´Ù
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-        // ½ÇÁ¦ °ÔÀÓ ·ÎÁ÷ ±¸ÇöÀº ¿©±â¿¡ ÇÏ½Ã¸é µË´Ï´Ù.
-        else
-        {
-              
-        }
-    }
-
-    DestroyWindow(hwnd);
-    UnregisterClass(wc.lpszClassName, wc.hInstance);
-
-    std::cout << "Tiny42D EngineÀÌ Á¾·áµÇ¾ú½À´Ï´Ù." << std::endl;
-    return 0;
-}
-
-// À©µµ¿ì ÇÁ·Î½ÃÀú ÇÔ¼ö
-LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    switch (msg) {
-    case WM_SIZE:
-        // À©µµ¿ì Å©±â º¯°æ ½Ã Ã³¸®
-        if (wParam == SIZE_MINIMIZED) {
-            std::cout << "À©µµ¿ì°¡ ÃÖ¼ÒÈ­µÇ¾ú½À´Ï´Ù" << std::endl;
-        } else if (wParam == SIZE_MAXIMIZED) {
-            std::cout << "À©µµ¿ì°¡ ÃÖ´ëÈ­µÇ¾ú½À´Ï´Ù" << std::endl;
-        } else if (wParam == SIZE_RESTORED) {
-            std::cout << "À©µµ¿ì°¡ º¹¿øµÇ¾ú½À´Ï´Ù" << std::endl;
-        } else {
-            std::cout << "À©µµ¿ì Å©±â º¯°æµÊ" << std::endl;
-        }
-        return 0;
-    case WM_SYSCOMMAND:
-        // ½Ã½ºÅÛ ¸í·É Ã³¸® (ÃÖ¼ÒÈ­, ÃÖ´ëÈ­, ´İ±â µî)
-        switch (wParam & 0xfff0) {
-        case SC_MINIMIZE:
-            std::cout << "ÃÖ¼ÒÈ­ ¹öÆ° Å¬¸¯" << std::endl;
-            break;
-        case SC_MAXIMIZE:
-            std::cout << "ÃÖ´ëÈ­ ¹öÆ° Å¬¸¯" << std::endl;
-            break;
-        case SC_RESTORE:
-            std::cout << "º¹¿ø ¹öÆ° Å¬¸¯" << std::endl;
-            break;
-        case SC_CLOSE:
-            std::cout << "´İ±â ¹öÆ° Å¬¸¯" << std::endl;
-            break;
-        case SC_KEYMENU: // ALT ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ¸Ş´º ºñÈ°¼ºÈ­
-            return 0;
-        }
-        break;
-    case WM_MOUSEMOVE:
-        break;
-    case WM_LBUTTONUP:
-        std::cout << "¿ŞÂÊ ¸¶¿ì½º ¹öÆ° Å¬¸¯" << std::endl;
-        break;
-    case WM_RBUTTONUP:
-        std::cout << "¿À¸¥ÂÊ ¸¶¿ì½º ¹öÆ° Å¬¸¯" << std::endl;
-        break;
-    case WM_KEYDOWN:
-        std::cout << "Å° ÀÔ·Â: " << (int)wParam << std::endl;
-        if (wParam == VK_ESCAPE) {
-            PostQuitMessage(0);
-        }
-        break;
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            
-            // À©µµ¿ì¸¦ ¾îµÎ¿î È¸»ö ¹è°æÀ¸·Î Ã¤¿ì±â
-            RECT rect;
-            GetClientRect(hWnd, &rect);
-            HBRUSH hBrush = CreateSolidBrush(RGB(64, 64, 64));
-            FillRect(hdc, &rect, hBrush);
-            DeleteObject(hBrush);
-            
-            // ÅØ½ºÆ® ±×¸®±â
-            SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(255, 255, 255));
-            const wchar_t* text = L"Tiny42D Engine - °ÔÀÓ ¿£Áø °³¹ß Áß...";
-            TextOut(hdc, 50, 50, text, wcslen(text));
-            
-            const wchar_t* instruction = L"ESC Å°¸¦ ´­·¯ Á¾·áÇÏ¼¼¿ä";
-            TextOut(hdc, 50, 80, instruction, wcslen(instruction));
-            
-            EndPaint(hWnd, &ps);
-        }
-        return 0;
-    case WM_DESTROY:
-        ::PostQuitMessage(0);
-        return 0;
-    }
-
-    return ::DefWindowProc(hWnd, msg, wParam, lParam);
+  std::cout << "Tiny42D Engine ì¢…ë£Œ" << std::endl;
+  return 0;
 }
