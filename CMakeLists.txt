@@ -2,62 +2,134 @@ cmake_minimum_required(VERSION 3.16)
 
 project(Tiny42DEngine VERSION 1.0.0 LANGUAGES CXX)
 
-# C++ Ç¥ÁØ ¼³Á¤
+# C++ í‘œì¤€
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Windows ÇÃ·§Æû È®ÀÎ
-if(NOT (WIN32 OR APPLE))
-    message(FATAL_ERROR "ÀÌ ÇÁ·ÎÁ§Æ®´Â Windows, Mac os ¿ëÀ¸·Î ¼³°èµÇ¾úÀ¸¸ç Win32 API, È¤Àº glfw°¡ ÇÊ¿äÇÕ´Ï´Ù.")
+# MSVC UTF-8 ì†ŒìŠ¤ íŒŒì¼ ì§€ì›
+if(MSVC)
+    add_compile_options(/utf-8)
 endif()
 
-# ½ÇÇà ÆÄÀÏ »ı¼º (ÄÜ¼Ö ¾ÖÇÃ¸®ÄÉÀÌ¼ÇÀ¸·Î º¯°æ)
-add_executable(Tiny42DEngine
+# í”Œë«í¼ í™•ì¸
+if(NOT (WIN32 OR APPLE OR UNIX))
+    message(FATAL_ERROR "ì´ í”„ë¡œì íŠ¸ëŠ” Windows, macOS, Linuxì—ì„œë§Œ ì§€ì›ë©ë‹ˆë‹¤.")
+endif()
+
+# ============================================================
+# ì™¸ë¶€ ë¼ì´ë¸ŒëŸ¬ë¦¬
+# ============================================================
+
+# Vulkan SDK ì°¾ê¸°
+find_package(Vulkan REQUIRED)
+
+# GLM (ìˆ˜í•™ ë¼ì´ë¸ŒëŸ¬ë¦¬, í—¤ë” ì „ìš©)
+find_package(glm CONFIG QUIET)
+if(NOT glm_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+        glm
+        GIT_REPOSITORY https://github.com/g-truc/glm.git
+        GIT_TAG 1.0.1
+    )
+    FetchContent_MakeAvailable(glm)
+endif()
+
+# ============================================================
+# ì†ŒìŠ¤ íŒŒì¼ (ê³µí†µ)
+# ============================================================
+set(COMMON_SOURCES
     src/main.cpp
+    src/renderer/vk_instance.cpp
 )
 
-# Windows Àü¿ë ¼³Á¤
+# í”Œë«í¼ë³„ ì†ŒìŠ¤ íŒŒì¼
 if(WIN32)
-    # Win32 API È°¼ºÈ­
-    add_definitions(-DWIN32_LEAN_AND_MEAN)
-    add_definitions(-DNOMINMAX)
-    # Unicode Áö¿ø È°¼ºÈ­
-    add_definitions(-DUNICODE)
-    add_definitions(-D_UNICODE)
+    set(PLATFORM_SOURCES src/platform/platform_win32.cpp)
+else()
+    set(PLATFORM_SOURCES src/platform/platform_glfw.cpp)
+endif()
 
-    # Windows ¶óÀÌºê·¯¸® ¸µÅ©
-    target_link_libraries(Tiny42DEngine
+# ============================================================
+# ì‹¤í–‰ íŒŒì¼
+# ============================================================
+add_executable(Tiny42DEngine
+    ${COMMON_SOURCES}
+    ${PLATFORM_SOURCES}
+)
+
+# ì†ŒìŠ¤ ë””ë ‰í† ë¦¬ë¥¼ include ê²½ë¡œì— ì¶”ê°€
+target_include_directories(Tiny42DEngine PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+# Vulkan & GLM ë§í¬ (ëª¨ë“  í”Œë«í¼ ê³µí†µ)
+target_link_libraries(Tiny42DEngine PRIVATE
+    Vulkan::Vulkan
+    glm::glm
+)
+
+# GLM: Vulkan ì¢Œí‘œê³„ í˜¸í™˜ ë§¤í¬ë¡œ
+target_compile_definitions(Tiny42DEngine PRIVATE
+    GLM_FORCE_RADIANS
+    GLM_FORCE_DEPTH_ZERO_TO_ONE
+)
+
+# ============================================================
+# í”Œë«í¼ë³„ ì„¤ì •
+# ============================================================
+
+# --- Windows ---
+if(WIN32)
+    target_compile_definitions(Tiny42DEngine PRIVATE
+        WIN32_LEAN_AND_MEAN
+        NOMINMAX
+        UNICODE
+        _UNICODE
+    )
+
+    target_link_libraries(Tiny42DEngine PRIVATE
         user32
         kernel32
         gdi32
     )
 
-    # Visual Studio ½ÃÀÛ ÇÁ·ÎÁ§Æ® ¼³Á¤
     if(CMAKE_GENERATOR MATCHES "Visual Studio")
         set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Tiny42DEngine)
     endif()
 endif()
 
-# Mac os Àü¿ë ¼³Á¤
+# --- macOS ---
 if(APPLE)
-    target_include_directories(Tiny42DEngine PUBLIC
-        /opt/homebrew/include
-        /Users/kim/VulkanSDK/1.4.321.0/macOS/include
-    )
+    find_package(glfw3 3.3 QUIET)
+    if(NOT glfw3_FOUND)
+        target_include_directories(Tiny42DEngine PRIVATE /opt/homebrew/include)
+        target_link_directories(Tiny42DEngine PRIVATE /opt/homebrew/lib)
+        target_link_libraries(Tiny42DEngine PRIVATE
+            /opt/homebrew/lib/libglfw.3.4.dylib
+        )
+    else()
+        target_link_libraries(Tiny42DEngine PRIVATE glfw)
+    endif()
+endif()
 
-    target_link_directories(Tiny42DEngine PUBLIC
-        /opt/homebrew/lib
-        /Users/kim/VulkanSDK/1.4.321.0/macOS/include
-    )
+# --- Linux ---
+if(UNIX AND NOT APPLE)
+    find_package(glfw3 3.3 REQUIRED)
+    find_package(X11 REQUIRED)
 
-    target_link_libraries(Tiny42DEngine
-        /opt/homebrew/lib/libglfw.3.4.dylib
-        /usr/local/lib/libvulkan.1.dylib
-        /usr/local/lib/libMoltenVK.dylib
+    target_link_libraries(Tiny42DEngine PRIVATE
+        glfw
+        ${X11_LIBRARIES}
+        dl
+        pthread
     )
 endif()
 
-# Ãâ·Â µğ·ºÅä¸®
+# ============================================================
+# ì¶œë ¥ ë””ë ‰í† ë¦¬
+# ============================================================
 set_target_properties(Tiny42DEngine PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
     RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin"
